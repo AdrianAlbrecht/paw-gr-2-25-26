@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Book, Author, Genre, MONTHS, BOOK_FORMATS
+from .models import Book, Author, Genre, MONTHS, BOOK_FORMATS, Osoba, Stanowisko
 from rest_framework.validators import UniqueTogetherValidator
 
 
@@ -123,4 +123,29 @@ class GenreSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Genre
+        fields = "__all__"
+        
+class OsobaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Osoba
+        fields = "__all__"
+        read_only_fields = ["id" , "data_dodania"]
+        
+    def validate_imie(self, value):
+        if not value.istitle():
+            raise serializers.ValidationError(
+                "Imię powinno zawierać tylko litery i rozpoczynać się wielką literą!"
+            )
+        return value
+    
+    def validate_nazwisko(self, value):
+        if not value.istitle():
+            raise serializers.ValidationError(
+                "Nazwisko powinno zawierać tylko litery i rozpoczynać się wielką literą!"
+            )
+        return value
+    
+class StanowiskoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Stanowisko
         fields = "__all__"
