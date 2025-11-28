@@ -21,4 +21,7 @@ urlpatterns = [
     # path('osoby_vbs/nazwisko', views.OsobaNameFilterView.as_view()),
     # path('stanowiska_vbs/', views.StanowiskoListAPIView.as_view()),
     # path('stanowiska_vbs/<int:pk>/', views.StanowiskoDetailAPIView.as_view()),
+    path("welcome/", views.welcome_view),
+    path("html/osoby/", views.osoba_list_html, name="osoba-list"),
+    path("html/osoby/<int:id>/", views.osoba_detail_html, name="osoba-detail"),
 ]
