@@ -1,11 +1,9 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import redirect, render
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from .models import Book, Osoba, Stanowisko
 from .serializers import BookSerializer, OsobaSerializer, StanowiskoSerializer
-from django.http import Http404, HttpResponse
-import datetime
 from .forms import OsobaForm
 
 # określamy dostępne metody żądania dla tego endpointu
@@ -150,53 +148,58 @@ class BookDetailView(RetrieveUpdateDestroyAPIView):
     queryset = Book.objects.all()
     serializer_class = BookSerializer
 
-# # 1. Wyświetlanie, dodawanie i usuwanie pojedynczego obiektu Osoba
-# class OsobaDetailAPIView(RetrieveDestroyAPIView, CreateAPIView):
-#     queryset = Osoba.objects.all()
-#     serializer_class = OsobaSerializer
+# 1. Wyświetlanie, dodawanie i usuwanie pojedynczego obiektu Osoba
+class OsobaDetailAPIView(RetrieveDestroyAPIView, CreateAPIView):
+    queryset = Osoba.objects.all()
+    serializer_class = OsobaSerializer
 
-# # 2. Wyświetlanie listy wszystkich obiektów Osoba
-# class OsobaListAPIView(ListAPIView):
-#     queryset = Osoba.objects.all()
-#     serializer_class = OsobaSerializer
+# 2. Wyświetlanie listy wszystkich obiektów Osoba
+class OsobaListAPIView(ListAPIView):
+    queryset = Osoba.objects.all()
+    serializer_class = OsobaSerializer
 
-# # 3. Wyświetlanie listy osób po fragmencie nazwiska
-# class OsobaSearchAPIView(ListAPIView):
-#     serializer_class = OsobaSerializer
+# 3. Wyświetlanie listy osób po fragmencie nazwiska
+class OsobaSearchAPIView(ListAPIView):
+    serializer_class = OsobaSerializer
 
-#     def get_queryset(self):
-#         # Pobieramy parametr 'name' z URL
-#         name = self.kwargs.get('name', None)
-#         if name:
-#             return Osoba.objects.filter(nazwisko__icontains=name)
-#         return Osoba.objects.none()  # jeśli brak parametru, zwracamy pusty queryset
+    def get_queryset(self):
+        # Pobieramy parametr 'name' z URL
+        name = self.kwargs.get('name', None)
+        if name:
+            return Osoba.objects.filter(nazwisko__icontains=name)
+        return Osoba.objects.none()  # jeśli brak parametru, zwracamy pusty queryset
     
-# class OsobaNameFilterView(APIView):
-#     # #Prostsza wersja ale wtedy wpisujemy po ?search= zamiast ?name=
-#     # queryset = Osoba.objects.all()
-#     # serializer_class = OsobaSerializer
-#     # filter_backends = [SearchFilter]
-#     # search_fields = ['nazwisko']
-#     def get(self, request):
-#         # Pobranie parametru 'name' z query params
-#         name = request.query_params.get('name', None)
+class OsobaNameFilterView(APIView):
+    # #Prostsza wersja ale wtedy wpisujemy po ?search= zamiast ?name=
+    # queryset = Osoba.objects.all()
+    # serializer_class = OsobaSerializer
+    # filter_backends = [SearchFilter]
+    # search_fields = ['nazwisko']
+    def get(self, request):
+        # Pobranie parametru 'name' z query params
+        name = request.query_params.get('name', None)
 
-#         if name:
-#             osoby = Osoba.objects.filter(nazwisko__icontains=name)
-#             serializer = OsobaSerializer(osoby, many=True)
-#             return Response(serializer.data, status=status.HTTP_200_OK)
-#         else:
-#             return Response({"error": "Parametr 'name' jest wymagany."}, status=status.HTTP_400_BAD_REQUEST)
+        if name:
+            osoby = Osoba.objects.filter(nazwisko__icontains=name)
+            serializer = OsobaSerializer(osoby, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        else:
+            return Response({"error": "Parametr 'name' jest wymagany."}, status=status.HTTP_400_BAD_REQUEST)
 
-# # 4. Wyświetlanie, dodawanie i usuwanie pojedynczego obiektu Stanowisko
-# class StanowiskoDetailAPIView(RetrieveDestroyAPIView, CreateAPIView):
-#     queryset = Stanowisko.objects.all()
-#     serializer_class = StanowiskoSerializer
+# 4. Wyświetlanie, dodawanie i usuwanie pojedynczego obiektu Stanowisko
+class StanowiskoDetailAPIView(RetrieveDestroyAPIView, CreateAPIView):
+    queryset = Stanowisko.objects.all()
+    serializer_class = StanowiskoSerializer
 
-# # 5. Wyświetlanie listy wszystkich obiektów Stanowisko
-# class StanowiskoListAPIView(ListAPIView):
-#     queryset = Stanowisko.objects.all()
-#     serializer_class = StanowiskoSerializer
+# 5. Wyświetlanie listy wszystkich obiektów Stanowisko
+class StanowiskoListAPIView(ListAPIView):
+    queryset = Stanowisko.objects.all()
+    serializer_class = StanowiskoSerializer
+    
+# kod umieszczamy w pliku views.py wybranej aplikacji
+
+from django.http import HttpResponse
+import datetime
 
 
 def welcome_view(request):
@@ -211,10 +214,12 @@ def welcome_view(request):
 def osoba_list_html(request):
     # pobieramy wszystkie obiekty Osoba z bazy poprzez QuerySet
     osoby = Osoba.objects.all()
-    #return HttpResponse(osoby)
+    # return HttpResponse(osoby)
     return render(request,
-                "biblioteka/osoba/list.html",
-                {'osoby': osoby})
+                  "biblioteka/osoba/list.html",
+                  {'osoby': osoby})
+    
+from django.http import Http404
     
 def osoba_detail_html(request, id):
     # pobieramy konkretny obiekt Osoba
@@ -274,3 +279,107 @@ def osoba_create_django_form(request):
     return render(request,
                   "biblioteka/osoba/create_django.html",
                   {'form': form})
+    
+# Lab 8 (B)
+## Zad 1
+def book_list_html(request):
+    books = Book.objects.all()
+    return render(request,
+                "biblioteka/book/list.html",
+                {'books': books})
+    
+def stanowisko_list_html(request):
+    stanowiska = Stanowisko.objects.all()
+    return render(request,
+                "biblioteka/stanowisko/list.html",
+                {'stanowiska': stanowiska})
+    
+def book_detail_html(request, id):
+    try:
+        book = Book.objects.get(id=id)
+    except Book.DoesNotExist:
+        raise Http404("Obiekt Book o podanym id nie istnieje")
+
+    if request.method == "GET":
+        return render(request,
+                    "biblioteka/book/detail.html",
+                    {'book': book})
+    ## Zad 4
+    if request.method == "POST":
+        book.delete()
+        return redirect('book-list') 
+    
+def stanowisko_detail_html(request, id):
+    try:
+        stanowisko = Stanowisko.objects.get(id=id)
+    except Stanowisko.DoesNotExist:
+        raise Http404("Obiekt Stanowisko o podanym id nie istnieje")
+
+    if request.method == "GET":
+        return render(request,
+                    "biblioteka/stanowisko/detail.html",
+                    {'stanowisko': stanowisko})
+    ## Zad 4
+    if request.method == "POST":
+        stanowisko.delete()
+        return redirect('stanowisko-list') 
+    
+## Zad 2
+from .forms import BookForm, StanowiskoForm
+    
+def book_create(request):
+    if request.method == "POST":
+        form = BookForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('book-list')  
+    else:
+        form = BookForm()
+
+    return render(request,
+                  "biblioteka/book/create.html",
+                  {'form': form})
+    
+def stanowisko_create(request):
+    if request.method == "POST":
+        form = StanowiskoForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('stanowisko-list')  
+    else:
+        form = StanowiskoForm()
+
+    return render(request,
+                  "biblioteka/stanowisko/create.html",
+                  {'form': form})
+    
+## Zad 3
+def osoba_name_search(request):
+    if request.method == "POST":
+        nazwisko = request.POST.get("nazwisko")
+        if nazwisko:
+            osoby = Osoba.objects.filter(nazwisko__icontains = nazwisko)
+            return render(request,
+                "biblioteka/osoba/search.html",
+                {'osoby': osoby})
+    return render(request,
+        "biblioteka/osoba/search.html")
+    
+## Zad 5
+from django.shortcuts import get_object_or_404
+
+def osoba_edit(request, id):
+    osoba = get_object_or_404(Osoba, id = id)
+    if request.method == 'POST':
+        form = OsobaForm(request.POST, instance=osoba)  # bindujemy dane do istniejącego obiektu
+        if form.is_valid():
+            form.save() 
+            return redirect('osoba-detail', id)  # przekierowujemy do widoku szczegółowego z id
+    else:
+        form = OsobaForm(instance=osoba)  # formularz z aktualnymi danymi obiektu
+
+    return render(request, 'biblioteka/osoba/edit.html', {'form': form, 'osoba': osoba})
+
+# A Stanowisko i Book adekwatnie do przykładu wyżej ;)
+
+# ============= Lab 9 ================
