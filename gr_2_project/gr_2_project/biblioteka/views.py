@@ -7,6 +7,7 @@ from rest_framework.response import Response
 from .models import Book, Osoba, Stanowisko
 from .serializers import BookSerializer, OsobaSerializer, StanowiskoSerializer
 from .forms import OsobaForm
+from django.contrib.auth.decorators import login_required
 
 from functools import wraps
 
@@ -22,7 +23,6 @@ def drf_token_required(view_func):
             return redirect('drf-token-login')
         return view_func(request, *args, **kwargs)
     return _wrapped_view
-
 
 # określamy dostępne metody żądania dla tego endpointu
 @api_view(['GET', "POST"])
@@ -93,7 +93,7 @@ def book_update_delete(request, pk):
         book.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
     
-@api_view(["GET","POST","DELETE"])
+@api_view(["GET","POST"]) # Lab 9 Zad 4
 def osoba_detail(request, pk):
     try:
         osoba = Osoba.objects.get(pk=pk)
@@ -108,10 +108,34 @@ def osoba_detail(request, pk):
         serializer = OsobaSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data, status = status.HTTP_201_CREATED)
+            return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
-    elif request.method == 'DELETE':
+# Lab 9 Zad 4    
+@api_view(["PUT"])
+def osoba_update(request, pk):
+    try:
+        osoba = Osoba.objects.get(pk=pk)
+    except Osoba.DoesNotExist:
+        return Response(status = status.HTTP_404_NOT_FOUND)
+
+    if request.method == 'PUT':
+        serializer = OsobaSerializer(osoba, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+@api_view(["DELETE"])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def osoba_delete(request, pk):
+    try:
+        osoba = Osoba.objects.get(pk=pk)
+    except Osoba.DoesNotExist:
+        return Response(status = status.HTTP_404_NOT_FOUND)
+    
+    if request.method == 'DELETE':
         osoba.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
     
@@ -246,8 +270,6 @@ def welcome_view(request):
         Aktualna data i czas na serwerze: {now}.
         </body></html>"""
     return HttpResponse(html)
-
-from django.contrib.auth.decorators import login_required
 
 #@login_required(login_url='user-login')
 @drf_token_required
@@ -452,7 +474,7 @@ def drf_token_login(request):
             token, _ = Token.objects.get_or_create(user=user)
             # zapisujemy token w sesji
             request.session['token'] = token.key
-            #request.session['user_id'] = user.id
+            request.session['user_id'] = user.id
             return redirect('osoba-list')
         else:
             return render(request, 'biblioteka/login.html', {'error': 'Nieprawidłowe dane'})
@@ -461,3 +483,25 @@ def drf_token_login(request):
 def drf_token_logout(request):
     request.session.flush()
     return redirect('drf-token-login')
+
+# Lab 9 Zad 2
+@login_required(login_url='user-login')
+def osoba_list_owner(request):
+    osoby = Osoba.objects.filter(wlasciciel = request.user)
+    return render(request,
+                "biblioteka/osoba/list.html",
+                {'osoby': osoby})
+    
+# Lab 9 Zad 5
+@drf_token_required
+def osoba_stanowisko(request, pk):
+    try:
+        stanowisko = Stanowisko.objects.get(pk = pk)
+    except Stanowisko.DoesNotExist:
+        raise Http404("Obiekt Stanowisko o podanym id nie istnieje")
+    
+    if request.method == "GET":
+        osoby = Osoba.objects.filter(stanowisko = stanowisko)
+        return render(request,
+                "biblioteka/osoba/list.html",
+                {'osoby': osoby})
